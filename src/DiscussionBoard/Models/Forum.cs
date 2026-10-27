@@ -1,11 +1,20 @@
-﻿namespace DiscussionBoard.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace DiscussionBoard.Models
 {
     public class Forum: EntityBase
 
     {
-        public string Name;
-        public string Description;
-        public int ForumId;
-        public int DiscussionThreadId;
+        [Required]
+        [StringLength(100, MinimumLength = 3)]
+        public string Name{ get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(1000, MinimumLength = 1)]
+        public string Description { get; set; } = string.Empty;
+
+        public ICollection<DiscussionThread> DiscussionThreads { get; set; }
+            = new List<DiscussionThread>();
+
     }
 }

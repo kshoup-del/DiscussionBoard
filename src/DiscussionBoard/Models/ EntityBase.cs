@@ -2,7 +2,7 @@
 {
     public abstract class EntityBase
     {
-        public int Id;
-        public bool isDeleted;
+        public int Id { get; set; }
+        public bool IsDeleted{ get; set; }
     }
 }

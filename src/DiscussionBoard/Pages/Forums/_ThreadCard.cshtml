@@ -1,0 +1,15 @@
+﻿
+@model DiscussionBoard.Models.DiscussionThread
+
+<article class="card mb-3">
+    <div class="card-body">
+        <h3 class="card-title">@Model.Title</h3>
+        <p class="card-text">@Model.Content</p>
+
+        <small class="text-muted">
+            Posted by @(Model.ApplicationUser?.UserName ?? "Unknown user")
+            — @Model.CreatedAt.ToLocalTime().ToString("g")
+        </small>
+    </div>
+</article>
+
