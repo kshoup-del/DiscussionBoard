@@ -1,3 +1,4 @@
+using DiscussionBoard.Services;
 using Microsoft.AspNetCore.Identity;
 
 namespace DiscussionBoard.Models
@@ -9,5 +10,10 @@ namespace DiscussionBoard.Models
 
         public ICollection<Post> Posts { get; set; }
             = new List<Post>();
+
+        public string DisplayName { get; set; }= string.Empty;
+        public string AvatarId { get; set; } = AvatarCatalog.DefaultId;
+
+
     }
 }
