@@ -47,6 +47,21 @@ namespace DiscussionBoard
             builder.Services.AddScoped<PostService>();
             var app = builder.Build();
 
+            using (var scope = app.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                db.Database.Migrate(); // makes sure the tables exist
+
+                if (!db.Forums.Any())
+                {
+                    db.Forums.AddRange(
+                        new Forum { Name = "General", Description = "General discussion" },
+                        new Forum { Name = "Help", Description = "Questions and answers" }
+                    );
+                    db.SaveChanges();
+                }
+            }
+
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {

@@ -1,4 +1,4 @@
-﻿@page
+﻿@page "/Discussion/Create/{ForumId:int}"
 @model DiscussionBoard.Pages.Discussions.CreateModel
 
 @{
@@ -7,7 +7,7 @@
 
 <h1>Create Discussion</h1>
 
-<form method="post" asp-route-forumId="@Model.ForumId">
+<form method="post" asp-route-ForumId="@Model.ForumId">
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
     <div class="mb-3">
@@ -22,9 +22,15 @@
         <span asp-validation-for="Input.Content" class="text-danger"></span>
     </div>
 
-    <button type="submit" class="btn btn-primary">Create Thread</button>
-    <a asp-page="/Forums/Details" asp-route-id="@Model.ForumId"
-       class="btn btn-secondary">Cancel</a>
+    <button type="submit" class="btn btn-primary">
+        Create Thread
+    </button>
+
+    <a asp-page="/Forums/Details"
+       asp-route-id="@Model.ForumId"
+       class="btn btn-secondary">
+        Cancel
+    </a>
 </form>
 
 @section Scripts {

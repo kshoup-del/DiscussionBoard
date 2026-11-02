@@ -1,77 +1,48 @@
-﻿@page "/Discussion/{threadId:int}"
+﻿@page
 @model DiscussionBoard.Pages.Discussions.DetailsModel
 
 @{
     ViewData["Title"] = Model.Thread?.Title ?? "Discussion";
 }
 
-<h1>@Model.Thread!.Title</h1>
+<h1>@Model.Thread?.Title</h1>
 
-<p>@Model.Thread.Content</p>
+<p>@Model.Thread?.Content</p>
 
-<small class="text-muted">
-    Started by @(Model.Thread.ApplicationUser?.UserName ?? "Unknown user")
-    — @Model.Thread.CreatedAt.ToLocalTime().ToString("g")
-</small>
+<hr />
 
-<hr/>
-
-<h2>Posts and Replies</h2>
-
-@if (User.Identity?.IsAuthenticated == true)
-{
-    <section class="card mb-4">
-        <div class="card-body">
-            <h3 class="h5">Join the discussion</h3>
-
-            <form method="post"
-                  asp-page-handler="Reply"
-                  asp-route-threadId="@Model.Thread.Id">
-
-                <div asp-validation-summary="ModelOnly"
-                     class="text-danger"></div>
-
-                <label asp-for="Input.Content" class="form-label">
-                    Your post
-                </label>
-
-                <textarea asp-for="Input.Content"
-                          class="form-control"
-                          rows="4"
-                          required
-                          maxlength="10000"></textarea>
-
-                <span asp-validation-for="Input.Content"
-                      class="text-danger"></span>
-
-                @* No ParentPostId: this creates a top-level post. *@
-
-                <button type="submit" class="btn btn-primary mt-2">
-                    Post
-                </button>
-            </form>
-        </div>
-    </section>
-}
+<h3>Replies</h3>
 
 @if (Model.PostTree.Count == 0)
 {
-    <p>No posts yet. Start the discussion!</p>
+    <p>No replies yet.</p>
 }
-else
+
+@foreach (var post in Model.PostTree)
 {
-    @foreach (var post in Model.PostTree)
-    {
-        <partial name="_PostTree" model="post"/>
-    }
+    <partial name="/Pages/Discussions/_PostTree.cshtml"
+             model="post" />
 }
 
-<a asp-page="/Forums/Details"
-   asp-route-id="@Model.Thread.ForumId"
-   class="btn btn-secondary mt-3">
-    Back to Forum
-</a>
+<hr />
 
-@section Scripts {
-    <partial name="_ValidationScriptsPartial"/>
-}
+<h3>Write a Post</h3>
+
+<form method="post"
+      asp-page-handler="Reply"
+      asp-route-threadId="@Model.Thread!.Id">
+
+    <label asp-for="Input.Content">Your post</label>
+
+    <textarea asp-for="Input.Content"
+              class="form-control"
+              rows="4"
+              required></textarea>
+
+    <span asp-validation-for="Input.Content"
+          class="text-danger"></span>
+
+    <button type="submit" class="btn btn-primary mt-2">
+        Submit Post
+    </button>
+</form>

@@ -1,39 +1,56 @@
 ﻿using DiscussionBoard.Data;
 using DiscussionBoard.Models;
 using Microsoft.EntityFrameworkCore;
+using DiscussionBoard.Data;
+using DiscussionBoard.Models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace DiscussionBoard.Services;
 
 public class PostService
 {
     private readonly ApplicationDbContext _context;
+    private readonly ILogger<PostService> _logger;
 
     public PostService(ApplicationDbContext context)
+        : this(context, NullLogger<PostService>.Instance)
+    {
+    }
+
+    public PostService(
+        ApplicationDbContext context,
+        ILogger<PostService> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
     public async Task<List<Post>> GetForThreadAsync(int threadId)
     {
-        // One database query: retrieve all non-deleted posts
-        // belonging to this discussion thread.
-        var posts = await _context.Posts
-            .Where(p =>
-                p.DiscussionThreadId == threadId &&
-                !p.IsDeleted)
+        return await _context.Posts
+            .Where(p => p.DiscussionThreadId == threadId && !p.IsDeleted)
             .Include(p => p.ApplicationUser)
             .ToListAsync();
-
-        // Sort in memory, because SQLite does not support
-        // ordering DateTimeOffset values directly.
-        return posts
-            .OrderBy(p => p.CreatedAt)
-            .ToList();
     }
 
-    public async Task AddAsync(Post post)
+    public async Task<Post> AddAsync(Post post)
     {
-        _context.Posts.Add(post);
-        await _context.SaveChangesAsync();
+        try
+        {
+            await _context.Posts.AddAsync(post);
+            await _context.SaveChangesAsync();
+            return post;
+        }
+        catch (DbUpdateException ex)
+        {
+            _logger.LogError(
+                ex,
+                "Error adding post to discussion {ThreadId}.",
+                post.DiscussionThreadId);
+
+            throw;
+        }
     }
 }

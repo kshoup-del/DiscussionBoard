@@ -1,7 +1,7 @@
 @page "/Forums/Index"
 @model ForumsModel
 @{ ViewData["Title"] = "Forums"; }
-<h1>Forums</h1>
+<h1>Forum</h1>
 @foreach (var forum in Model.Items)
 {
     <partial name="/Pages/Forums/_ForumCard.cshtml" model="forum" />

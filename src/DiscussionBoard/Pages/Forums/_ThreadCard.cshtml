@@ -1,15 +1,37 @@
 ﻿
 @model DiscussionBoard.Models.DiscussionThread
 
-<article class="card mb-3">
+<div class="card mb-3">
     <div class="card-body">
-        <h3 class="card-title">@Model.Title</h3>
-        <p class="card-text">@Model.Content</p>
+
+        <h5 class="card-title">
+            <a asp-page="/Discussions/Details"
+               asp-route-threadId="@Model.Id">
+                @Model.Title
+            </a>
+        </h5>
+
+        <p class="card-text">
+            @Model.Content
+        </p>
 
         <small class="text-muted">
-            Posted by @(Model.ApplicationUser?.UserName ?? "Unknown user")
-            — @Model.CreatedAt.ToLocalTime().ToString("g")
+            Created: @Model.CreatedAt.ToLocalTime().ToString("g")
         </small>
+
+        @if (User.Identity?.IsAuthenticated == true &&
+             User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+             == Model.ApplicationUserId)
+        {
+            <div class="mt-2">
+                <a asp-page="/Discussions/Edit"
+                   asp-route-id="@Model.Id"
+                   class="btn btn-sm btn-warning">
+                    Edit
+                </a>
+            </div>
+        }
+
     </div>
-</article>
+</div>
 

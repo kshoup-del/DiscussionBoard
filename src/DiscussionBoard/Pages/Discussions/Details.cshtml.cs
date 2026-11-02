@@ -2,7 +2,6 @@
 using System.Security.Claims;
 using DiscussionBoard.Models;
 using DiscussionBoard.Services;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -38,51 +37,32 @@ public class DetailsModel : PageModel
         [StringLength(10000, MinimumLength = 1)]
         public string Content { get; set; } = string.Empty;
 
-        // Null means a top-level post.
         public int? ParentPostId { get; set; }
     }
 
     public async Task<IActionResult> OnGetAsync(int threadId)
     {
-        var loaded = await LoadThreadAsync(threadId);
-
-        if (!loaded)
-        {
+        if (!await LoadThreadAsync(threadId))
             return NotFound();
-        }
 
         return Page();
     }
 
-    [Authorize]
     public async Task<IActionResult> OnPostReplyAsync(int threadId)
     {
-        var loaded = await LoadThreadAsync(threadId);
+        if (User.Identity?.IsAuthenticated != true)
+            return Challenge();
 
-        if (!loaded)
-        {
+        if (!await LoadThreadAsync(threadId))
             return NotFound();
-        }
 
         if (!ModelState.IsValid)
-        {
             return Page();
-        }
 
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        if (string.IsNullOrWhiteSpace(userId))
-        {
-            return Challenge();
-        }
-
-        // Get all active posts for this thread, then validate the parent
-        // against that collection.
         var existingPosts = await _posts.GetForThreadAsync(threadId);
 
         if (Input.ParentPostId.HasValue &&
-            !existingPosts.Any(post =>
-                post.Id == Input.ParentPostId.Value))
+            !existingPosts.Any(p => p.Id == Input.ParentPostId.Value))
         {
             ModelState.AddModelError(
                 nameof(Input.ParentPostId),
@@ -90,6 +70,11 @@ public class DetailsModel : PageModel
 
             return Page();
         }
+
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrWhiteSpace(userId))
+            return Challenge();
 
         var post = new Post
         {
@@ -107,10 +92,8 @@ public class DetailsModel : PageModel
         }
         catch (DbUpdateException ex)
         {
-            _logger.LogError(
-                ex,
-                "Failed to save a reply in thread {ThreadId}.",
-                threadId);
+            _logger.LogError(ex,
+                "Failed to save a reply in thread {ThreadId}.", threadId);
 
             ModelState.AddModelError(
                 string.Empty,
@@ -119,9 +102,7 @@ public class DetailsModel : PageModel
             return Page();
         }
 
-        return RedirectToPage(
-            "/Discussions/Details",
-            new { threadId });
+        return RedirectToPage("/Discussions/Details", new { threadId });
     }
 
     private async Task<bool> LoadThreadAsync(int threadId)
@@ -129,16 +110,14 @@ public class DetailsModel : PageModel
         Thread = await _threads.GetAsync(threadId);
 
         if (Thread == null)
-        {
             return false;
-        }
 
         var posts = await _posts.GetForThreadAsync(threadId);
 
-        // Use the instructor-provided PostTreeBuilder to construct
-        // the parent-child hierarchy.
         PostTree = PostTreeBuilder.Build(posts);
 
         return true;
     }
+
+
 }

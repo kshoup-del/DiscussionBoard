@@ -2,32 +2,37 @@
 @model DiscussionBoard.Pages.Forums.DetailsModel
 
 @{
-    ViewData["Title"] = Model.Forum?.Name ?? "Forum Details";
+    ViewData["Title"] = Model.Forum?.Name ?? "Forum";
 }
 
-<div class="container mt-4">
-    <div class="mb-4">
-        <h1>@Model.Forum!.Name</h1>
-        <p>@Model.Forum.Description</p>
-    </div>
+<h1>@Model.Forum?.Name</h1>
 
-    <hr />
+<p>@Model.Forum?.Description</p>
 
-    <h2>Discussions</h2>
+<hr />
 
-    @if (Model.Threads.Count == 0)
-    {
-        <p>No discussions have been created in this forum yet.</p>
-    }
-    else
-    {
-        @foreach (var thread in Model.Threads)
-        {
-            <partial name="_ThreadCard" model="thread" />
-        }
-    }
+<h2>Discussions</h2>
 
-    <a asp-page="/Forums/Index" class="btn btn-secondary mt-3">
-        Back to Forums
+@if (User.Identity?.IsAuthenticated == true)
+{
+    <a asp-page="/Discussions/Create"
+       asp-route-forumId="@Model.Forum.Id"
+       class="btn btn-primary mb-3">
+        Create Discussion
     </a>
-</div>
+}
+
+@if (Model.Threads.Count == 0)
+{
+    <p>No discussions have been created yet.</p>
+}
+
+@foreach (var thread in Model.Threads)
+{
+    <partial name="/Pages/Forums/_ThreadCard.cshtml"
+             model="thread" />
+}
+
+<a asp-page="/Forums/Index" class="btn btn-secondary">
+    Back to Forums
+</a>

@@ -39,7 +39,7 @@ public class CreateModel : PageModel
         public string Title { get; set; } = string.Empty;
 
         [Required]
-        [StringLength(10000, MinimumLength = 1)]
+        [StringLength(1000, MinimumLength = 1)]
         public string Content { get; set; } = string.Empty;
     }
 
@@ -47,36 +47,27 @@ public class CreateModel : PageModel
     {
         var forum = await _forums.GetByIdAsync(ForumId);
 
-        if (forum == null)
-        {
+        if (forum == null || forum.IsDeleted)
             return NotFound();
-        }
 
         return Page();
     }
 
     public async Task<IActionResult> OnPostAsync()
     {
-        if (!ModelState.IsValid)
-        {
-            return Page();
-        }
-
         var forum = await _forums.GetByIdAsync(ForumId);
 
-        if (forum == null)
-        {
+        if (forum == null || forum.IsDeleted)
             return NotFound();
-        }
+
+        if (!ModelState.IsValid)
+            return Page();
 
         string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
         if (string.IsNullOrEmpty(userId))
-        {
             return Challenge();
-        }
 
-        // Explicitly map permitted values; never accept the author from form data.
         var thread = new DiscussionThread
         {
             Title = Input.Title,
@@ -92,12 +83,16 @@ public class CreateModel : PageModel
         }
         catch (DbUpdateException ex)
         {
-            _logger.LogError(ex, "Failed to create a discussion thread.");
+            _logger.LogError(ex,
+                "Failed to create a discussion thread.");
+
             ModelState.AddModelError(string.Empty,
                 "The discussion thread could not be created.");
+
             return Page();
         }
 
-        return RedirectToPage("/Forums/Details", new { id = forum.Id });
+        return RedirectToPage("/Forums/Details",
+            new { id = forum.Id });
     }
 }
