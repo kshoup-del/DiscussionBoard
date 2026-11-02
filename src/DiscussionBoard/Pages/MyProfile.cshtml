@@ -1,0 +1,81 @@
+﻿@page
+@model DiscussionBoard.Pages.MyProfileModel
+
+@{
+    ViewData["Title"] = "My Profile";
+}
+
+<h1>My Profile</h1>
+
+<form method="post">
+
+    <div asp-validation-summary="All" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label asp-for="Input.DisplayName" class="form-label">
+            Display Name
+        </label>
+
+        <input asp-for="Input.DisplayName" class="form-control"/>
+
+        <span asp-validation-for="Input.DisplayName"
+              class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <h3>Current Avatar</h3>
+
+        @{
+            var currentAvatar = Model.AvatarOptions
+                .FirstOrDefault(a => a.Id == Model.Input.AvatarId);
+        }
+
+        @if (currentAvatar != null)
+        {
+            <img src="@currentAvatar.ImagePath"
+                 alt="Your current avatar"
+                 width="100"
+                 height="100"/>
+        }
+    </div>
+
+    <fieldset class="mb-3">
+        <legend>Choose an Avatar</legend>
+
+        @foreach (var avatar in Model.AvatarOptions)
+        {
+            <div class="form-check mb-3">
+
+                <input class="form-check-input"
+                       type="radio"
+                       asp-for="Input.AvatarId"
+                       value="@avatar.Id"
+                       id="avatar-@avatar.Id"/>
+
+                <label class="form-check-label"
+                       for="avatar-@avatar.Id">
+
+                    <img src="@avatar.ImagePath"
+                         alt="@avatar.AltText"
+                         width="75"
+                         height="75"/>
+
+                    @avatar.AltText
+
+                </label>
+
+            </div>
+        }
+    </fieldset>
+
+    <button type="submit" class="btn btn-primary">
+        Save Profile
+    </button>
+    @if (TempData["StatusMessage"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["StatusMessage"]
+        </div>
+    }
+
+</form>

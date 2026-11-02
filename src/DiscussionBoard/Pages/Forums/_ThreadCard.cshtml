@@ -1,8 +1,12 @@
 ﻿
 @model DiscussionBoard.Models.DiscussionThread
 
-<div class="card mb-3">
+<article class="card mb-3">
     <div class="card-body">
+
+        <partial name="_AuthorDisplay"
+                 model="Model.ApplicationUser"/>
+
 
         <h5 class="card-title">
             <a asp-page="/Discussions/Details"
@@ -33,5 +37,5 @@
         }
 
     </div>
-</div>
+</article>
 

@@ -2,12 +2,14 @@
 using System.Security.Claims;
 using DiscussionBoard.Models;
 using DiscussionBoard.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 
 namespace DiscussionBoard.Pages.Discussions;
 
+[Authorize]
 public class DetailsModel : PageModel
 {
     private readonly DiscussionThreadService _threads;

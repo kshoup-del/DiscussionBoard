@@ -1,10 +1,12 @@
 ﻿using DiscussionBoard.Models;
 using DiscussionBoard.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace DiscussionBoard.Pages.Forums;
 
+[Authorize]
 public class DetailsModel : PageModel
 {
     private readonly ForumService _forums;

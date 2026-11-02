@@ -1,4 +1,4 @@
-﻿@page
+﻿@page "/Discussion/{threadId:int}"
 @model DiscussionBoard.Pages.Discussions.DetailsModel
 
 @{
@@ -6,10 +6,11 @@
 }
 
 <h1>@Model.Thread?.Title</h1>
-
+    <partial name="_AuthorDisplay"
+         model="Model.Thread.ApplicationUser"/>
 <p>@Model.Thread?.Content</p>
 
-<hr />
+<hr/>
 
 <h3>Replies</h3>
 
@@ -21,10 +22,10 @@
 @foreach (var post in Model.PostTree)
 {
     <partial name="/Pages/Discussions/_PostTree.cshtml"
-             model="post" />
+             model="post"/>
 }
 
-<hr />
+<hr/>
 
 <h3>Write a Post</h3>
 
@@ -46,3 +47,7 @@
         Submit Post
     </button>
 </form>
+
+
+
+

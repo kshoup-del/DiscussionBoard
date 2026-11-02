@@ -1,0 +1,27 @@
+﻿@model DiscussionBoard.Models.ApplicationUser
+@using DiscussionBoard.Services
+
+@{
+    var isUnconfigured =
+        string.IsNullOrWhiteSpace((Model?.DisplayName));
+
+    var displayName = isUnconfigured
+    ? "Unconfigured User"
+    :  Model!.DisplayName!.Trim();
+
+    var avatarPath = isUnconfigured
+        ? AvatarCatalog.ImagePath(AvatarCatalog.DefaultId)
+        : AvatarCatalog.ImagePath(Model!.AvatarId);
+}
+
+<div class="d-flex align-items-center gap-2 mb-2">
+    <img src="@avatarPath"
+         alt="@displayName avatar"
+         class="rounded-circle"
+         width="40"
+         height="40" />
+
+    <span class="fw-semibold">@displayName</span>
+</div>
+
+
