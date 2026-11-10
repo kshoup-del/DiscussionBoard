@@ -12,6 +12,7 @@ public class DetailsModel : PageModel
     private readonly ForumService _forums;
     private readonly DiscussionThreadService _threads;
 
+
     public DetailsModel(
         ForumService forums,
         DiscussionThreadService threads)

@@ -1,0 +1,50 @@
+﻿@page
+@model DiscussionBoard.Pages.Admin.UsersModel
+@using DiscussionBoard.Authorization
+@{
+    ViewData["Title"] = "Manage Users";
+}
+
+<h1>Manage Users</h1>
+
+@if (Model.Message is not null)
+{
+    <div class="alert @(Model.MessageIsSuccess ? "alert-success" : "alert-danger")" role="alert">
+        @Model.Message
+    </div>
+}
+
+<form method="post">
+    <div class="mb-3">
+        <label asp-for="SelectedUserId" class="form-label">User</label>
+        <select asp-for="SelectedUserId" asp-items="Model.UserOptions" class="form-select">
+            <option value="">-- Select User --</option>
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Select</button>
+</form>
+
+@if (Model.SelectedUser is not null)
+{
+    <hr />
+    <form method="post" asp-page-handler="UpdateRole">
+        <input type="hidden" asp-for="SelectedUserId" />
+        <input type="hidden" asp-for="RoleName" value="@ApplicationRoles.Admin" />
+
+        <p><strong>Display name:</strong> @Model.SelectedUser.DisplayName</p>
+        <p><strong>Email:</strong> @Model.SelectedUser.Email</p>
+
+        @if (Model.SelectedUserIsAdmin)
+        {
+            <button type="submit" name="Operation" value="remove" class="btn btn-danger">
+                Remove from Admin
+            </button>
+        }
+        else
+        {
+            <button type="submit" name="Operation" value="add" class="btn btn-success">
+                Add to Admin
+            </button>
+        }
+    </form>
+}

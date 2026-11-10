@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using DiscussionBoard.Authorization;
 
 namespace DiscussionBoard.Pages.Discussions;
 
@@ -15,15 +16,18 @@ public class DetailsModel : PageModel
     private readonly DiscussionThreadService _threads;
     private readonly PostService _posts;
     private readonly ILogger<DetailsModel> _logger;
+    private readonly IApplicationAuthorizationService _authorization;
+    public bool CanEditThread { get; set; }
 
     public DetailsModel(
         DiscussionThreadService threads,
         PostService posts,
-        ILogger<DetailsModel> logger)
+        ILogger<DetailsModel> logger, IApplicationAuthorizationService authorization)
     {
         _threads = threads;
         _posts = posts;
         _logger = logger;
+        _authorization = authorization;
     }
 
     public DiscussionThread? Thread { get; private set; }
@@ -117,6 +121,7 @@ public class DetailsModel : PageModel
         var posts = await _posts.GetForThreadAsync(threadId);
 
         PostTree = PostTreeBuilder.Build(posts);
+        CanEditThread = await _authorization.CanEditAsync(User, Thread);
 
         return true;
     }

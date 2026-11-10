@@ -1,5 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Security.Claims;
+﻿
+using DiscussionBoard.Authorization;
+using DiscussionBoard.Models;
 using DiscussionBoard.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -9,46 +10,36 @@ using Microsoft.EntityFrameworkCore;
 namespace DiscussionBoard.Pages.Discussions;
 
 [Authorize]
-public class EditModel : PageModel
+public class ThreadEditModel : PageModel
 {
     private readonly DiscussionThreadService _threads;
-    private readonly ILogger<EditModel> _logger;
+    private readonly IApplicationAuthorizationService _authorization;
+    private readonly ILogger<ThreadEditModel> _logger;
 
-    public EditModel(
+    public ThreadEditModel(
         DiscussionThreadService threads,
-        ILogger<EditModel> logger)
+        IApplicationAuthorizationService authorization,
+        ILogger<ThreadEditModel> logger)
     {
         _threads = threads;
+        _authorization = authorization;
         _logger = logger;
     }
 
     [BindProperty]
-    public InputModel Input { get; set; } = new();
-
-    public class InputModel
-    {
-        [Required]
-        [StringLength(200, MinimumLength = 3)]
-        public string Title { get; set; } = string.Empty;
-
-        [Required]
-        [StringLength(1000, MinimumLength = 1)]
-        public string Content { get; set; } = string.Empty;
-    }
+    public DiscussionEditViewModel Input { get; set; } = new();
 
     public async Task<IActionResult> OnGetAsync(int id)
     {
         var thread = await _threads.GetAsync(id);
 
-        if (thread == null || thread.IsDeleted)
+        if (thread == null)
             return NotFound();
 
-        string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        if (thread.ApplicationUserId != userId)
+        if (!await _authorization.CanEditAsync(User, thread))
             return Forbid();
 
-        Input = new InputModel
+        Input = new DiscussionEditViewModel
         {
             Title = thread.Title,
             Content = thread.Content
@@ -61,12 +52,10 @@ public class EditModel : PageModel
     {
         var thread = await _threads.GetAsync(id);
 
-        if (thread == null || thread.IsDeleted)
+        if (thread == null)
             return NotFound();
 
-        string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        if (thread.ApplicationUserId != userId)
+        if (!await _authorization.CanEditAsync(User, thread))
             return Forbid();
 
         if (!ModelState.IsValid)
@@ -81,16 +70,20 @@ public class EditModel : PageModel
         }
         catch (DbUpdateException ex)
         {
-            _logger.LogError(ex,
-                "Failed to update discussion thread {ThreadId}.", id);
+            _logger.LogError(
+                ex,
+                "Failed to update discussion thread {ThreadId}.",
+                id);
 
-            ModelState.AddModelError(string.Empty,
+            ModelState.AddModelError(
+                string.Empty,
                 "The discussion thread could not be updated.");
 
             return Page();
         }
 
-        return RedirectToPage("/Forums/Details",
-            new { id = thread.ForumId });
+        return RedirectToPage(
+            "/Discussions/Details",
+            new { threadId = id });
     }
 }

@@ -1,9 +1,6 @@
 ﻿using DiscussionBoard.Data;
 using DiscussionBoard.Models;
 using Microsoft.EntityFrameworkCore;
-using DiscussionBoard.Data;
-using DiscussionBoard.Models;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -35,6 +32,12 @@ public class PostService
             .ToListAsync();
     }
 
+    public async Task<Post?> GetAsync(int id)
+    {
+        return await _context.Posts
+            .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted);
+    }
+
     public async Task<Post> AddAsync(Post post)
     {
         try
@@ -52,5 +55,20 @@ public class PostService
 
             throw;
         }
+    }
+
+    public async Task UpdateAsync(Post post)
+    {
+        var existingPost = await GetAsync(post.Id);
+
+        if (existingPost == null)
+        {
+            throw new InvalidOperationException("Post not found.");
+        }
+
+        existingPost.Title = post.Title;
+        existingPost.Content = post.Content;
+
+        await _context.SaveChangesAsync();
     }
 }

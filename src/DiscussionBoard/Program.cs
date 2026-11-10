@@ -5,12 +5,15 @@ using DiscussionBoard.Models;
 using DiscussionBoard.Services;
 using Serilog;
 using Serilog.Formatting.Compact;
+using DiscussionBoard.Authorization;
+using Microsoft.AspNetCore.Authorization;
+
 
 namespace DiscussionBoard
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -36,6 +39,7 @@ namespace DiscussionBoard
 
             builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
                     options.SignIn.RequireConfirmedAccount = !builder.Environment.IsDevelopment())
+                .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
             builder.Services.AddRazorPages(options =>
@@ -51,11 +55,18 @@ namespace DiscussionBoard
             });
 
             builder.Services.AddSingleton<ILogReader, JsonLogReader>();
-
+            builder.Services.AddScoped<IApplicationAuthorizationService, ApplicationAuthorizationService>();
             builder.Services.AddScoped<ForumService>();
             builder.Services.AddScoped<DiscussionThreadService>();
             builder.Services.AddScoped<PostService>();
             builder.Services.AddScoped<IUserProfileService, UserProfileService>();
+            builder.Services.AddAuthorization(options =>
+            {
+                options.AddPolicy(ApplicationAuthorizationPolicies.IsOwnerOrAdmin, policy =>
+                    policy.Requirements.Add(new IsOwnerOrAdminRequirement()));
+            });
+
+            builder.Services.AddSingleton<IAuthorizationHandler, IsOwnerOrAdminHandler>();
             var app = builder.Build();
 
             using (var scope = app.Services.CreateScope())
@@ -98,7 +109,21 @@ namespace DiscussionBoard
             app.MapRazorPages()
                 .WithStaticAssets();
 
+          /*if (args.Contains("--bootstrap-admin", StringComparer.Ordinal))
+            {
+                if (!app.Environment.IsDevelopment())
+                {
+                    throw new InvalidOperationException("This tool is development only.");
+                }
+
+                await AdminBootstrapper.BootstrapAsync(
+                    app.Services,
+                    app.Configuration ["BootstrapAdmin:Email"]
+                );
+                return;
+            }*/
             app.Run();
         }
+
     }
 }
