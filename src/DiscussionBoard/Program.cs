@@ -18,7 +18,7 @@ namespace DiscussionBoard
             var builder = WebApplication.CreateBuilder(args);
 
             // Get the location of the Logs folder for SeriLog
-            string logPath = Path.Combine(builder.Environment.ContentRootPath, "Logs",  "discussionboard-.json");
+            string logPath = Path.Combine(builder.Environment.ContentRootPath, "Logs", "discussionboard-.json");
 
             builder.Services.AddSerilog((services, configuration) => configuration
                 .WriteTo.Console()
@@ -30,7 +30,8 @@ namespace DiscussionBoard
             );
 
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
-                                   throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+                                   throw new InvalidOperationException(
+                                       "Connection string 'DefaultConnection' not found.");
 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlite(connectionString));
@@ -48,7 +49,7 @@ namespace DiscussionBoard
                 options.Conventions.AuthorizePage("/Discussion");
                 options.Conventions.AuthorizePage("/MyProfile");
 
-                if(builder.Environment.IsEnvironment("Testing"))
+                if (builder.Environment.IsEnvironment("Testing"))
                 {
                     options.Conventions.AllowAnonymousToPage("/Discussions/Details");
                 }
@@ -99,6 +100,20 @@ namespace DiscussionBoard
 
             app.UseHttpsRedirection();
 
+            app.Use(async (context, next) =>
+            {
+                context.Response.Headers["Content-Security-Policy"]
+                    = "default-src 'self';" +
+                      "object-src 'none';" +
+                      "base-uri 'self';" +
+                      "style-src 'self';" +
+                      "script-src 'self';" +
+                      "form-action 'self'; " +
+                      "frame-ancestors 'self';";
+
+                await next();
+            });
+
             app.UseRouting();
 
             app.UseAuthentication();
@@ -109,21 +124,20 @@ namespace DiscussionBoard
             app.MapRazorPages()
                 .WithStaticAssets();
 
-          /*if (args.Contains("--bootstrap-admin", StringComparer.Ordinal))
-            {
-                if (!app.Environment.IsDevelopment())
-                {
-                    throw new InvalidOperationException("This tool is development only.");
-                }
+            /*if (args.Contains("--bootstrap-admin", StringComparer.Ordinal))
+              {
+                  if (!app.Environment.IsDevelopment())
+                  {
+                      throw new InvalidOperationException("This tool is development only.");
+                  }
 
-                await AdminBootstrapper.BootstrapAsync(
-                    app.Services,
-                    app.Configuration ["BootstrapAdmin:Email"]
-                );
-                return;
-            }*/
+                  await AdminBootstrapper.BootstrapAsync(
+                      app.Services,
+                      app.Configuration ["BootstrapAdmin:Email"]
+                  );
+                  return;
+              }*/
             app.Run();
         }
-
     }
 }
