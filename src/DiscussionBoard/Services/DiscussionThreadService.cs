@@ -51,6 +51,10 @@ namespace DiscussionBoard.Services
                 await _context.DiscussionThreads.AddAsync(thread);
                 await _context.SaveChangesAsync();
 
+                _logger.LogInformation(
+                    "Discussion thread {ThreadId} created in forum {ForumId}.",
+                    thread.Id,thread.ForumId);
+
                 return thread;
             }
             catch (DbUpdateException ex)

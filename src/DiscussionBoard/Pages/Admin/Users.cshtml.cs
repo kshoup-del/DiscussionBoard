@@ -59,50 +59,73 @@ public class UsersModel : PageModel
     }
 
     // Form 2: add or remove the Admin role
-    public async Task<IActionResult> OnPostUpdateRoleAsync()
+    public Task<IActionResult> OnPostAddAsync()
+    {
+        RoleName = ApplicationRoles.Admin;
+        return UpdateRoleAsync("add");
+    }
+
+    public Task<IActionResult> OnPostRemoveAsync()
+    {
+        RoleName = ApplicationRoles.Admin;
+        return UpdateRoleAsync("remove");
+    }
+
+    public Task<IActionResult> OnPostUpdateRoleAsync()
+    {
+        return UpdateRoleAsync(Operation);
+    }
+
+    private async Task<IActionResult> UpdateRoleAsync(string? operation)
     {
         await LoadUsersAsync();
 
-        if (string.IsNullOrWhiteSpace(SelectedUserId) || !await LoadSelectedUserAsync())
+        if (string.IsNullOrWhiteSpace(SelectedUserId) ||
+            !await LoadSelectedUserAsync())
         {
             SetMessage(false, "The selected user does not exist.");
             SelectedUserId = null;
-            return Page();
+            return RedirectToPage();
         }
 
         if (RoleName != ApplicationRoles.Admin)
         {
             SetMessage(false, "That role is not supported.");
-            return Page();
+            return RedirectToPage();
         }
 
         IdentityResult result;
-        switch (Operation)
+
+        switch (operation)
         {
             case "add":
-                result = await _authService.AddRoleAsync(User, SelectedUserId, RoleName);
+                result = await _authService.AddRoleAsync(
+                    User, SelectedUserId, RoleName);
                 break;
+
             case "remove":
-                result = await _authService.RemoveRoleAsync(User, SelectedUserId, RoleName);
+                result = await _authService.RemoveRoleAsync(
+                    User, SelectedUserId, RoleName);
                 break;
+
             default:
                 SetMessage(false, "Invalid operation.");
-                return Page();
+                return RedirectToPage();
         }
 
         if (result.Succeeded)
         {
-            SetMessage(true, Operation == "add"
+            SetMessage(true, operation == "add"
                 ? $"{SelectedUser!.DisplayName} was added to the {RoleName} role."
                 : $"{SelectedUser!.DisplayName} was removed from the {RoleName} role.");
         }
         else
         {
-            SetMessage(false, string.Join(" ", result.Errors.Select(e => e.Description)));
+            SetMessage(false,
+                string.Join(" ", result.Errors.Select(e => e.Description)));
         }
 
-        await LoadSelectedUserAsync(); // refresh so the correct button is shown
-        return Page();
+        return RedirectToPage();
     }
 
     private async Task LoadUsersAsync()

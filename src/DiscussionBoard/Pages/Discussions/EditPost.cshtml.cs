@@ -1,5 +1,4 @@
-﻿
-using DiscussionBoard.Authorization;
+﻿using DiscussionBoard.Authorization;
 using DiscussionBoard.Models;
 using DiscussionBoard.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -13,17 +12,19 @@ public class EditPostModel : PageModel
 {
     private readonly PostService _posts;
     private readonly IApplicationAuthorizationService _authorization;
+    private readonly ILogger<EditPostModel> _logger;
 
     public EditPostModel(
         PostService posts,
-        IApplicationAuthorizationService authorization)
+        IApplicationAuthorizationService authorization
+        , ILogger<EditPostModel> logger)
     {
         _posts = posts;
         _authorization = authorization;
+        _logger = logger;
     }
 
-    [BindProperty]
-    public DiscussionEditViewModel Input { get; set; } = new();
+    [BindProperty] public DiscussionEditViewModel Input { get; set; } = new();
 
     public async Task<IActionResult> OnGetAsync(int threadId, int postId)
     {
@@ -36,7 +37,12 @@ public class EditPostModel : PageModel
             return NotFound();
 
         if (!await _authorization.CanEditAsync(User, post))
+        {
+            _logger.LogWarning("User {UserId} cannot edit post {PostId} in thread {ThreadId}.",
+                User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, post.Id, threadId);
             return Forbid();
+        }
+
 
         Input = new DiscussionEditViewModel
         {
@@ -58,7 +64,11 @@ public class EditPostModel : PageModel
             return NotFound();
 
         if (!await _authorization.CanEditAsync(User, post))
+        {
+            _logger.LogWarning("User {UserId} cannot edit post {PostId} in thread {ThreadId}.",
+                User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, post.Id, threadId);
             return Forbid();
+        }
 
         if (!ModelState.IsValid)
             return Page();
@@ -73,4 +83,3 @@ public class EditPostModel : PageModel
             new { threadId });
     }
 }
-
